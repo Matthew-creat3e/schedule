@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#2563eb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="My Schedule">
+<title>My Schedule</title>
+
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='512' height='512' rx='100' fill='%232563eb'/%3E%3Cpath d='M 160 200 L 240 280 L 360 160' stroke='%23ffffff' stroke-width='40' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Crect x='140' y='320' width='232' height='8' rx='4' fill='%23ffffff' opacity='0.7'/%3E%3Crect x='140' y='350' width='180' height='8' rx='4' fill='%23ffffff' opacity='0.5'/%3E%3C/svg%3E">
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --bg: #ffffff;
+    --bg-soft: #f7f8fa;
+    --bg-elev: #eef1f5;
+    --primary: #2563eb;
+    --primary-dark: #1d4ed8;
+    --primary-light: #dbeafe;
+    --text: #1a1a1a;
+    --text-dim: #5a5e66;
+    --text-faint: #9ca3af;
+    --line: #e5e7eb;
+    --line-strong: #d1d5db;
+    --done: #16a34a;
+    --done-light: #dcfce7;
+    --skip: #dc2626;
+    --skip-light: #fee2e2;
+    --sacred: #9333ea;
+    --sacred-light: #f3e8ff;
+    --warn: #ea580c;
+    --warn-light: #ffedd5;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-lg: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+  }
+
+  html, body {
+    background: var(--bg-soft);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+    line-height: 1.5;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--primary);
+    color: #ffffff;
+    padding: 18px 20px;
+    padding-top: calc(18px + env(safe-area-inset-top));
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
+  }
+  .header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .greeting {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .greeting .day {
+    opacity: 0.85;
+    font-weight: 500;
+  }
+  .clock {
+    font-size: 15px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    opacity: 0.95;
+  }
+  .date-line {
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0.85;
+    margin-top: 4px;
+  }
+
+  /* TABS */
+  .tabs {
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    padding: 0 8px;
+    position: sticky;
+    top: 80px;
+    z-index: 40;
+  }
+  .tab {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 14px 12px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-dim);
+    cursor: pointer;
+    position: relative;
+    min-height: 48px;
+    font-family: inherit;
+  }
+  .tab.active { color: var(--primary); }
+  .tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 20%;
+    right: 20%;
+    height: 3px;
+    background: var(--primary);
+    border-radius: 2px 2px 0 0;
+  }
+
+  .wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 16px 14px 110px;
+  }
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* INSTALL HINT */
+  .hint {
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    padding: 12px 14px;
+    border-radius: 12px;
+    margin-bottom: 14px;
+    font-size: 13px;
+    line-height: 1.5;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .hint-body { flex: 1; }
+  .hint-body strong { display: block; margin-bottom: 2px; }
+  .hint .close {
+    background: transparent;
+    border: none;
+    color: var(--primary-dark);
+    font-size: 22px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 4px;
+    font-family: inherit;
+  }
+
+  /* MODE CHIPS */
+  .modes {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 4px 0 16px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .modes::-webkit-scrollbar { display: none; }
+  .chip {
+    flex-shrink: 0;
+    padding: 10px 16px;
+    background: var(--bg);
+    border: 1.5px solid var(--line);
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.15s;
+    min-height: 40px;
+    font-family: inherit;
+  }
+  .chip.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #ffffff;
+    font-weight: 600;
+  }
+
+  /* FOCUS CARD */
+  .focus {
+    background: var(--bg);
+    border: 1.5px solid var(--line);
+    border-radius: 16px;
+    padding: 16px 18px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+  .focus.bad {
+    background: var(--warn-light);
+    border-color: var(--warn);
+  }
+  .focus-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 4px;
+  }
+  .focus.bad .focus-label { color: var(--warn); }
+  .focus-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--primary);
+    letter-spacing: -0.01em;
+    margin-bottom: 4px;
+  }
+  .focus.bad .focus-title { color: var(--warn); }
+  .focus-sub {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  /* PROGRESS */
+  .progress {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    background: var(--bg);
+    border: 1.5px solid var(--line);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+  }
+  .progress-bar {
+    flex: 1;
+    height: 8px;
+    background: var(--bg-elev);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--primary);
+    border-radius: 999px;
+    transition: width 0.4s ease;
+  }
+  .progress-text {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--primary);
+    font-variant-numeric: tabular-nums;
+    min-width: 50px;
+    text-align: right;
+  }
+
+  /* TASKS */
+  .task {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    background: var(--bg);
+    border: 1.5px solid var(--line);
+    border-radius: 14px;
+    margin-bottom: 8px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+    min-height: 70px;
+    box-shadow: var(--shadow);
+  }
+  .task:active { transform: scale(0.99); }
+
+  .task.active-now {
+    background: var(--primary-light);
+    border-color: var(--primary);
+    border-width: 2px;
+    box-shadow: var(--shadow-lg);
+  }
+  .task.done {
+    background: var(--done-light);
+    border-color: var(--done);
+  }
+  .task.done .task-name { color: var(--done); text-decoration: line-through; }
+  .task.done .task-time { color: var(--done); }
+  .task.skipped {
+    background: var(--skip-light);
+    border-color: var(--skip);
+    border-style: dashed;
+  }
+  .task.skipped .task-name { color: var(--skip); text-decoration: line-through; }
+  .task.skipped .task-time { color: var(--skip); }
+  .task.past:not(.done):not(.skipped) {
+    opacity: 0.55;
+    border-style: dashed;
+  }
+  .task.sacred {
+    background: var(--sacred-light);
+    border-color: var(--sacred);
+  }
+  .task.sacred .task-name { color: var(--sacred); font-weight: 700; }
+  .task.sacred.done { background: var(--done-light); border-color: var(--done); }
+  .task.sacred.done .task-name { color: var(--done); }
+
+  .check {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border: 2px solid var(--line-strong);
+    border-radius: 50%;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    transition: all 0.15s;
+  }
+  .task.active-now .check { border-color: var(--primary); }
+  .task.done .check {
+    background: var(--done);
+    border-color: var(--done);
+    color: #ffffff;
+    font-size: 18px;
+  }
+  .task.done .check::after { content: '✓'; }
+  .task.skipped .check {
+    border-color: var(--skip);
+    color: var(--skip);
+    font-size: 20px;
+  }
+  .task.skipped .check::after { content: '✕'; }
+
+  .task-body {
+    flex: 1;
+    min-width: 0;
+  }
+  .task-time {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--primary);
+    font-variant-numeric: tabular-nums;
+    margin-bottom: 2px;
+  }
+  .task-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.3;
+  }
+  .task-detail {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-top: 2px;
+    line-height: 1.4;
+  }
+  .task-logged {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--done);
+    margin-top: 4px;
+    font-variant-numeric: tabular-nums;
+  }
+  .task.skipped .task-logged { color: var(--skip); }
+
+  /* CATEGORY DOT */
+  .cat-dot {
+    flex-shrink: 0;
+    width: 6px;
+    height: 38px;
+    border-radius: 3px;
+  }
+  .cat-mission { background: var(--primary); }
+  .cat-family { background: var(--sacred); }
+  .cat-physical { background: var(--warn); }
+  .cat-work { background: #d97706; }
+  .cat-transit { background: #0891b2; }
+  .cat-rest { background: var(--text-faint); }
+  .cat-prep { background: #ca8a04; }
+
+  /* BAD DAY BANNER */
+  .badday {
+    background: var(--warn-light);
+    border: 1.5px solid var(--warn);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.5;
+  }
+  .badday strong { color: var(--warn); }
+  .badday em { color: var(--text-dim); font-style: italic; font-size: 13px; display: block; margin-top: 4px; }
+
+  /* CONTROL BAR */
+  .controls {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid var(--line);
+    padding: 12px 14px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+    display: flex;
+    gap: 8px;
+    z-index: 40;
+  }
+  .btn {
+    flex: 1;
+    padding: 14px 10px;
+    background: var(--bg);
+    border: 1.5px solid var(--line);
+    border-radius: 12px;
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 48px;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn.warn { color: var(--warn); border-color: var(--warn); }
+  .btn.warn.on { background: var(--warn); color: #ffffff; }
+
+  /* STRATEGY VIEW */
+  .section {
+    margin-bottom: 24px;
+  }
+  .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+    padding: 0 4px;
+  }
+  .card {
+    background: var(--bg);
+    border: 1.5px solid var(--line);
+    border-radius: 14px;
+    padding: 16px 18px;
+    box-shadow: var(--shadow);
+  }
+  .card.accent {
+    border-left: 5px solid var(--primary);
+  }
+  .card.warn-accent {
+    border-left: 5px solid var(--warn);
+    background: var(--warn-light);
+  }
+  .card p {
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--text);
+  }
+  .card p + p { margin-top: 10px; }
+  .card strong { color: var(--primary); font-weight: 700; }
+  .card.warn-accent strong { color: var(--warn); }
+
+  .tier {
+    background: var(--bg);
+    border: 1.5px solid var(--line);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    box-shadow: var(--shadow);
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .tier-badge {
+    flex-shrink: 0;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 2px;
+  }
+  .tier-1 .tier-badge { background: var(--primary); color: #ffffff; }
+  .tier-2 .tier-badge { background: var(--primary-light); color: var(--primary-dark); }
+  .tier-3 .tier-badge { background: var(--bg-elev); color: var(--text-dim); }
+  .tier-4 .tier-badge { background: var(--skip-light); color: var(--skip); }
+  .tier-body { flex: 1; }
+  .tier-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+  .tier-desc {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  .rule {
+    background: var(--bg);
+    border: 1.5px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 6px;
+    display: flex;
+    gap: 12px;
+    box-shadow: var(--shadow);
+  }
+  .rule-num {
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    background: var(--primary);
+    color: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .rule-text {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.45;
+    flex: 1;
+    padding-top: 4px;
+  }
+
+  .list-item {
+    padding: 10px 14px;
+    border-radius: 10px;
+    margin-bottom: 6px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text);
+  }
+  .list-item strong { color: var(--primary); font-weight: 700; }
+
+  .closer {
+    margin-top: 24px;
+    padding: 20px;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 14px;
+    font-style: italic;
+  }
+  .closer strong { color: var(--text); font-style: normal; }
+
+  /* DAY COUNTER (Jeremy's IT Lab tracker) */
+  .day-counter {
+    background: var(--primary);
+    color: #ffffff;
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: var(--shadow);
+  }
+  .dc-info { flex: 1; }
+  .dc-label {
+    font-size: 12px;
+    font-weight: 600;
+    opacity: 0.85;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 2px;
+  }
+  .dc-value {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .dc-btn {
+    background: rgba(255,255,255,0.18);
+    border: 1.5px solid rgba(255,255,255,0.4);
+    color: #ffffff;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    min-height: 42px;
+  }
+  .dc-btn:active { transform: scale(0.96); background: rgba(255,255,255,0.28); }
+
+  /* STREAKS STRIP */
+  .streaks {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .streak {
+    background: var(--bg);
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 4px;
+    text-align: center;
+    box-shadow: var(--shadow);
+  }
+  .streak-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+    margin-bottom: 3px;
+  }
+  .streak.hot .streak-value { color: var(--warn); }
+  .streak.cold .streak-value { color: var(--text-faint); }
+  .streak-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    line-height: 1.2;
+  }
+
+  /* STATS VIEW */
+  .stat-card {
+    background: var(--bg);
+    border: 1.5px solid var(--line);
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow);
+  }
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .stat-row:last-child { border-bottom: none; }
+  .stat-name {
+    font-size: 14px;
+    color: var(--text-dim);
+    font-weight: 500;
+  }
+  .stat-num {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--primary);
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-num .stat-unit {
+    font-size: 13px;
+    color: var(--text-dim);
+    font-weight: 500;
+    margin-left: 3px;
+  }
+
+  .week-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .week-day {
+    aspect-ratio: 1;
+    background: var(--bg-elev);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border: 1.5px solid transparent;
+  }
+  .week-day.today {
+    border-color: var(--primary);
+  }
+  .week-day.has-data {
+    background: var(--primary-light);
+  }
+  .week-day.complete {
+    background: var(--done);
+    color: #ffffff;
+  }
+  .week-day.partial {
+    background: var(--warn-light);
+  }
+  .wd-name {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+  .wd-pct {
+    font-size: 13px;
+    font-weight: 700;
+    margin-top: 2px;
+    font-variant-numeric: tabular-nums;
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-row">
+    <div class="greeting">Hi Matthew <span class="day" id="greetDay">—</span></div>
+    <div class="clock" id="clock">—</div>
+  </div>
+  <div class="date-line" id="dateLine">—</div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" data-view="today">Today</button>
+  <button class="tab" data-view="strategy">The Plan</button>
+  <button class="tab" data-view="stats">Stats</button>
+</div>
+
+<div class="wrap">
+
+  <!-- TODAY VIEW -->
+  <div class="view active" id="view-today">
+
+    <div class="hint" id="hint">
+      <div class="hint-body">
+        <strong>Add this to your home screen</strong>
+        iPhone: Share → Add to Home Screen. Android: ⋮ menu → Add to Home screen.
+      </div>
+      <button class="close" onclick="dismissHint()">×</button>
+    </div>
+
+    <div class="modes" id="modes"></div>
+
+    <div class="badday" id="baddayBanner" style="display:none;">
+      <strong>Bad day mode is on.</strong> Workout and study are off today. Just protect dinner, kid time, and sleep. That's enough.
+      <em>Rule 5 — miss a night, move on. No guilt.</em>
+    </div>
+
+    <div class="focus" id="focus">
+      <div class="focus-label" id="focusLabel">Tonight's focus</div>
+      <div class="focus-title" id="focusTitle">—</div>
+      <div class="focus-sub" id="focusSub">—</div>
+    </div>
+
+    <div class="day-counter">
+      <div class="dc-info">
+        <div class="dc-label">Jeremy's IT Lab — Free CCNA</div>
+        <div class="dc-value">Day <span id="jeremyDay">7</span></div>
+      </div>
+      <button class="dc-btn" onclick="advanceJeremyDay()">Day done · +1</button>
+    </div>
+
+    <div class="streaks" id="streaks"></div>
+
+    <div class="progress">
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-text" id="progressText">0 / 0</div>
+    </div>
+
+    <div id="taskList"></div>
+
+    <div class="closer">
+      One day at a time.<br>
+      <strong>They sleep. You build.</strong>
+    </div>
+  </div>
+
+  <!-- STRATEGY VIEW -->
+  <div class="view" id="view-strategy">
+
+    <div class="section">
+      <div class="section-title">The mission</div>
+      <div class="card accent">
+        <p>You have <strong>16 months</strong> to land a cleared cybersecurity role near Ellsworth AFB. That window doesn't reward scattered effort across seven projects. It rewards two things done relentlessly: <strong>finish Strayer</strong> and <strong>pass CCNA, then Sec+</strong>.</p>
+        <p>Everything else either feeds that mission or waits its turn. The ventures stay alive — they just stop eating you.</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Right now — 3 weeks of term left</div>
+      <div class="card warn-accent">
+        <p>You're in <strong>week 8 of 11</strong>. Three weeks to land <strong>CIS 376</strong> and <strong>SQL</strong>. Until finals close, Strayer takes Tuesday + Thursday + Saturday morning. CCNA stays on maintenance. After finals, the term break becomes your CCNA sprint window.</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">What gets your time</div>
+      <div class="tier tier-1"><div class="tier-badge">Top</div><div class="tier-body"><div class="tier-name">Strayer + CCNA</div><div class="tier-desc">The credential path. Sharpest hours go here.</div></div></div>
+      <div class="tier tier-2"><div class="tier-badge">Support</div><div class="tier-body"><div class="tier-name">HOO + family</div><div class="tier-desc">HOO is cash flow — Shelby runs leads, you build. Family is why any of this matters.</div></div></div>
+      <div class="tier tier-3"><div class="tier-badge">Drip</div><div class="tier-body"><div class="tier-name">NoReturn Apparel</div><div class="tier-desc">One Saturday drop per week through PUMP. The pipeline is built for it.</div></div></div>
+      <div class="tier tier-4"><div class="tier-badge">Paused</div><div class="tier-body"><div class="tier-name">GHOSTSTACK / TCB / HOO AI</div><div class="tier-desc">One Saturday afternoon a month, max. Resume full pace after CCNA cert.</div></div></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Rules to live by</div>
+      <div class="rule"><div class="rule-num">1</div><div class="rule-text">Mission first: Strayer and CCNA. Everything else serves or waits.</div></div>
+      <div class="rule"><div class="rule-num">2</div><div class="rule-text">Dinner is sacred. You cook. The family eats together.</div></div>
+      <div class="rule"><div class="rule-num">3</div><div class="rule-text">Kid time 7:15 to 8:30 PM is phone-down. They get your best.</div></div>
+      <div class="rule"><div class="rule-num">4</div><div class="rule-text">One focus per night. No mixing. No multitasking.</div></div>
+      <div class="rule"><div class="rule-num">5</div><div class="rule-text">Miss a night? Move on. Never double-up. Guilt isn't a strategy.</div></div>
+      <div class="rule"><div class="rule-num">6</div><div class="rule-text">Sunday is family, church, and rest. Build nothing.</div></div>
+      <div class="rule"><div class="rule-num">7</div><div class="rule-text">Workout 3 days a week, mobility 2 days. Non-negotiable.</div></div>
+      <div class="rule"><div class="rule-num">8</div><div class="rule-text">Bed by 10:15 PM. Sleep is armor.</div></div>
+      <div class="rule"><div class="rule-num">9</div><div class="rule-text">On site 10 minutes early. Early lands. Late costs.</div></div>
+      <div class="rule"><div class="rule-num">10</div><div class="rule-text">NoReturn drops Saturday only. No weekday scatter.</div></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">What's paused so you can breathe</div>
+      <div class="list-item"><strong>GHOSTSTACK build</strong> — resume after CCNA cert.</div>
+      <div class="list-item"><strong>TCB Collections</strong> — waiting on photos anyway.</div>
+      <div class="list-item"><strong>HOO AI Employee product</strong> — build after Sec+.</div>
+      <div class="list-item"><strong>New cold outreach</strong> — Shelby-routed leads only.</div>
+      <div class="list-item"><strong>Daily NoReturn building</strong> — trust the PUMP pipeline.</div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">What winning looks like</div>
+      <div class="list-item">→ <strong>Strayer degree finished</strong> — your biggest credential.</div>
+      <div class="list-item">→ <strong>CCNA passed</strong> — proof you know networks.</div>
+      <div class="list-item">→ <strong>Sec+ passed</strong> — cleared-role minimum.</div>
+      <div class="list-item">→ <strong>HOO running as cash flow</strong> — sustains the run.</div>
+      <div class="list-item">→ <strong>Family whole and present</strong> — Rapid City, September 2026.</div>
+    </div>
+
+    <div class="closer">
+      One day at a time.<br>
+      <strong>They sleep. You build.</strong>
+    </div>
+  </div>
+
+  <!-- STATS VIEW -->
+  <div class="view" id="view-stats">
+
+    <div class="section">
+      <div class="section-title">Last 7 days</div>
+      <div class="stat-card">
+        <div class="week-grid" id="weekGrid"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Lifetime</div>
+      <div class="stat-card" id="lifetimeStats"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Current streaks</div>
+      <div class="stat-card" id="streakStats"></div>
+    </div>
+
+    <div class="closer">
+      One day at a time.<br>
+      <strong>They sleep. You build.</strong>
+    </div>
+  </div>
+
+</div>
+
+<div class="controls">
+  <button class="btn warn" id="baddayBtn" onclick="toggleBadDay()">Bad day</button>
+  <button class="btn" onclick="resetDay()">Reset</button>
+  <button class="btn" onclick="catchUp()">Catch up</button>
+</div>
+
+<script>
+/* === STORAGE === */
+const Store = (() => {
+  let mem = {};
+  const ok = (() => { try { localStorage.setItem('__t','1'); localStorage.removeItem('__t'); return true; } catch(e) { return false; } })();
+  return {
+    get: k => { try { return ok ? JSON.parse(localStorage.getItem(k) || 'null') : (mem[k] || null); } catch(e) { return mem[k] || null; } },
+    set: (k,v) => { try { if(ok) localStorage.setItem(k, JSON.stringify(v)); else mem[k] = v; } catch(e) { mem[k] = v; } }
+  };
+})();
+
+/* === UTIL === */
+function parseHM(s) { const [h,m] = s.split(':').map(Number); return h*60 + (m||0); }
+function to12(s) {
+  const [h,m] = s.split(':').map(Number);
+  const p = h >= 12 ? 'PM' : 'AM';
+  return `${h%12||12}:${String(m).padStart(2,'0')} ${p}`;
+}
+function nowMin() { const d = new Date(); return d.getHours()*60 + d.getMinutes(); }
+function todayKey() { const d = new Date(); return `sched:${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function nowStamp() {
+  const d = new Date();
+  const h = d.getHours();
+  return `${h%12||12}:${String(d.getMinutes()).padStart(2,'0')} ${h>=12?'PM':'AM'}`;
+}
+
+/* === MISSIONS === */
+const MISSIONS = {
+  0: { focus: 'Family · Church · Rest', detail: 'No screens for work today.' },
+  1: { focus: 'CCNA study', detail: "Watch the next Jeremy's IT Lab day + Packet Tracer drill." },
+  2: { focus: 'Strayer · CIS 376', detail: 'Reading and weekly assignment progress.' },
+  3: { focus: 'CCNA labs', detail: "Review Jeremy's recent day + PACKETKILL or Boson drill." },
+  4: { focus: 'Strayer · SQL', detail: 'Reading and weekly assignment progress.' },
+  5: { focus: 'HOO · build night', detail: "Client work, Shelby's leads, demo builds." },
+  6: { focus: 'Saturday ops', detail: 'Strayer block + CCNA labs + NoReturn drop.' }
+};
+
+/* === SCHEDULES === */
+const SCHED_6AM = [
+  { id:'wake',     start:'4:30',  end:'4:30',  name:'Wake up',                                cat:'rest' },
+  { id:'workout',  start:'4:30',  end:'4:50',  name:'Workout · 20 min',                       cat:'physical', detail:'Mon, Wed, Fri. Tue/Thu: stretch + scripture.' },
+  { id:'shower',   start:'4:50',  end:'5:00',  name:'Shower',                                  cat:'physical' },
+  { id:'gear',     start:'5:00',  end:'5:05',  name:'Coffee · gear · last check',              cat:'prep' },
+  { id:'rollout',  start:'5:05',  end:'5:05',  name:'Roll out',                                cat:'transit' },
+  { id:'commute1', start:'5:05',  end:'5:50',  name:'Drive · CCNA audio',                      cat:'transit', detail:"Jeremy's IT Lab — replay yesterday's day, or Anki review." },
+  { id:'onsite',   start:'5:50',  end:'5:50',  name:'On site · 10 minutes early',              cat:'work', detail:'Early lands. Late costs.' },
+  { id:'work',     start:'6:00',  end:'17:00', name:'Work',                                    cat:'work' },
+  { id:'commute2', start:'17:00', end:'17:45', name:'Drive home · decompress',                 cat:'transit', detail:'Music or prayer. No brain work.' },
+  { id:'home',     start:'17:45', end:'18:00', name:'Home · hug the kids · reset',             cat:'family' },
+  { id:'cook',     start:'18:00', end:'18:45', name:'Cook dinner',                             cat:'family' },
+  { id:'dinner',   start:'18:45', end:'19:15', name:'Family dinner',                           cat:'family', sacred:true },
+  { id:'kidtime',  start:'19:15', end:'20:30', name:'Kid time',                                cat:'family', sacred:true, detail:'Phone in the drawer.' },
+  { id:'bedtime',  start:'20:30', end:'21:00', name:'Bedtime routine · kids down by 9',        cat:'family' },
+  { id:'mission',  start:'21:00', end:'22:00', name:'Tonight\'s focus · 60 min',               cat:'mission', missionByDay:true },
+  { id:'winddown', start:'22:00', end:'22:15', name:"Wind down · pick tomorrow's one thing",   cat:'rest' },
+  { id:'sleep',    start:'22:15', end:'22:15', name:'Sleep',                                   cat:'rest', detail:'6h 15m floor.' }
+];
+
+const SCHED_7AM = [
+  { id:'wake',     start:'4:30',  end:'4:30',  name:'Wake up',                                cat:'rest' },
+  { id:'workout',  start:'4:30',  end:'5:00',  name:'Workout · 30 min',                       cat:'physical' },
+  { id:'shower',   start:'5:00',  end:'5:15',  name:'Shower',                                  cat:'physical' },
+  { id:'gear',     start:'5:15',  end:'5:30',  name:'Coffee · gear · scripture',               cat:'prep' },
+  { id:'breakfast',start:'5:30',  end:'6:00',  name:'Breakfast · family time',                 cat:'family' },
+  { id:'rollout',  start:'6:05',  end:'6:05',  name:'Roll out',                                cat:'transit' },
+  { id:'commute1', start:'6:05',  end:'6:50',  name:'Drive · CCNA audio',                      cat:'transit' },
+  { id:'onsite',   start:'6:50',  end:'6:50',  name:'On site · 10 minutes early',              cat:'work' },
+  { id:'work',     start:'7:00',  end:'18:00', name:'Work',                                    cat:'work' },
+  { id:'commute2', start:'18:00', end:'18:45', name:'Drive home · decompress',                 cat:'transit' },
+  { id:'home',     start:'18:45', end:'19:00', name:'Home · hug the kids · reset',             cat:'family' },
+  { id:'cook',     start:'19:00', end:'19:30', name:'Cook dinner',                             cat:'family' },
+  { id:'dinner',   start:'19:30', end:'20:00', name:'Family dinner',                           cat:'family', sacred:true },
+  { id:'kidtime',  start:'20:00', end:'20:45', name:'Kid time',                                cat:'family', sacred:true },
+  { id:'bedtime',  start:'20:45', end:'21:00', name:'Bedtime routine',                         cat:'family' },
+  { id:'mission',  start:'21:00', end:'22:00', name:"Tonight's focus · 60 min",                cat:'mission', missionByDay:true },
+  { id:'winddown', start:'22:00', end:'22:15', name:'Wind down',                               cat:'rest' },
+  { id:'sleep',    start:'22:15', end:'22:15', name:'Sleep',                                   cat:'rest' }
+];
+
+const SCHED_SAT_OFF = [
+  { id:'wake',     start:'6:30',  end:'6:30',  name:'Wake up',                                cat:'rest' },
+  { id:'workout',  start:'7:00',  end:'7:45',  name:'Long workout · 45 min',                  cat:'physical' },
+  { id:'breakfast',start:'7:45',  end:'8:30',  name:'Breakfast with family',                  cat:'family' },
+  { id:'strayer',  start:'8:30',  end:'11:30', name:'Strayer deep block · 3 hours',           cat:'mission', detail:'CIS 376 + SQL. Biggest weekly win.' },
+  { id:'lunch',    start:'11:30', end:'13:00', name:'Family lunch · errands',                 cat:'family' },
+  { id:'ccna',     start:'13:00', end:'15:00', name:'CCNA labs · 2 hours',                    cat:'mission' },
+  { id:'noreturn', start:'15:00', end:'16:00', name:'NoReturn weekly drop',                   cat:'mission', detail:'PUMP run + caption + schedule.' },
+  { id:'family',   start:'16:00', end:'22:00', name:'Family · phone down',                    cat:'family', sacred:true },
+  { id:'sleep',    start:'22:00', end:'22:00', name:'Sleep',                                   cat:'rest' }
+];
+
+const SCHED_SAT_WORK = [
+  { id:'wake',     start:'4:30',  end:'4:30',  name:'Wake up',                                cat:'rest' },
+  { id:'morning',  start:'4:30',  end:'5:05',  name:'Morning routine',                         cat:'physical' },
+  { id:'commute1', start:'5:05',  end:'5:50',  name:'Drive · CCNA audio',                     cat:'transit' },
+  { id:'work',     start:'6:00',  end:'17:00', name:'Work',                                   cat:'work' },
+  { id:'commute2', start:'17:00', end:'17:45', name:'Drive home',                             cat:'transit' },
+  { id:'dinner',   start:'18:30', end:'19:15', name:'Family dinner',                          cat:'family', sacred:true },
+  { id:'kidtime',  start:'19:15', end:'20:30', name:'Kid time',                                cat:'family', sacred:true },
+  { id:'strayer',  start:'21:00', end:'22:00', name:'Strayer catch-up · 60 min cap',          cat:'mission' },
+  { id:'sleep',    start:'22:15', end:'22:15', name:'Sleep',                                  cat:'rest' }
+];
+
+const SCHED_SUN = [
+  { id:'wake',     start:'6:30',  end:'6:30',  name:'Wake up gently',                         cat:'rest' },
+  { id:'church',   start:'8:00',  end:'12:00', name:'Church · family morning',                cat:'family', sacred:true },
+  { id:'lunch',    start:'12:00', end:'13:30', name:'Family lunch',                            cat:'family' },
+  { id:'rest',     start:'13:30', end:'20:30', name:'Rest · family · no work',                cat:'family', sacred:true },
+  { id:'review',   start:'20:30', end:'21:00', name:'Sunday review',                          cat:'mission', detail:'Last week: 1 win, 1 miss. Set the next week.' },
+  { id:'sleep',    start:'22:00', end:'22:00', name:'Sleep',                                  cat:'rest' }
+];
+
+function badDayFilter(s) {
+  return s.filter(t => t.sacred || t.id === 'wake' || t.id === 'sleep' || t.id === 'work' || t.id === 'shower' || t.id === 'cook' || t.id === 'home' || t.id === 'commute1' || t.id === 'commute2' || t.id === 'onsite' || t.id === 'gear' || t.id === 'rollout');
+}
+
+const SCHEDULES = { '6am': SCHED_6AM, '7am': SCHED_7AM, 'sat-off': SCHED_SAT_OFF, 'sat-work': SCHED_SAT_WORK, 'sun': SCHED_SUN };
+
+const MODES = [
+  { id:'6am', label:'6 AM day' },
+  { id:'7am', label:'7 AM day' },
+  { id:'sat-off', label:'Saturday off' },
+  { id:'sat-work', label:'Saturday work' },
+  { id:'sun', label:'Sunday' }
+];
+
+/* === STATE === */
+let state = { mode: '6am', bad: false, tasks: {} };
+
+function defaultMode() {
+  const d = new Date().getDay();
+  if (d === 0) return 'sun';
+  if (d === 6) return 'sat-off';
+  return '6am';
+}
+
+function load() {
+  const s = Store.get(todayKey());
+  if (s) {
+    state.mode = s.mode || defaultMode();
+    state.bad = !!s.bad;
+    state.tasks = s.tasks || {};
+  } else {
+    state.mode = defaultMode();
+    state.bad = false;
+    state.tasks = {};
+  }
+}
+
+function save() {
+  Store.set(todayKey(), state);
+}
+
+/* === RENDER === */
+function activeSched() {
+  const s = SCHEDULES[state.mode] || SCHED_6AM;
+  return state.bad ? badDayFilter(s) : s;
+}
+
+function renderModes() {
+  const el = document.getElementById('modes');
+  el.innerHTML = '';
+  MODES.forEach(m => {
+    const b = document.createElement('button');
+    b.className = 'chip' + (state.mode === m.id ? ' active' : '');
+    b.textContent = m.label;
+    b.onclick = () => { state.mode = m.id; state.tasks = {}; save(); render(); };
+    el.appendChild(b);
+  });
+}
+
+function renderFocus() {
+  const el = document.getElementById('focus');
+  const m = MISSIONS[new Date().getDay()];
+  el.className = 'focus' + (state.bad ? ' bad' : '');
+  if (state.bad) {
+    document.getElementById('focusLabel').textContent = 'Today · Bad day mode';
+    document.getElementById('focusTitle').textContent = 'Protect the basics';
+    document.getElementById('focusSub').textContent = 'Dinner. Kid time. Sleep. That\'s the whole list.';
+  } else {
+    document.getElementById('focusLabel').textContent = 'Tonight\'s focus';
+    document.getElementById('focusTitle').textContent = m.focus;
+    document.getElementById('focusSub').textContent = m.detail;
+  }
+  document.getElementById('baddayBanner').style.display = state.bad ? 'block' : 'none';
+}
+
+function taskStatus(t) {
+  const ts = state.tasks[t.id] || {};
+  if (ts.skipped) return 'skipped';
+  if (ts.done) return 'done';
+  const n = nowMin();
+  const s = parseHM(t.start), e = parseHM(t.end);
+  if (n >= s && n <= Math.max(e, s+1)) return 'active-now';
+  if (n < s) return 'upcoming';
+  return 'past';
+}
+
+function renderTasks() {
+  const sched = activeSched();
+  const list = document.getElementById('taskList');
+  list.innerHTML = '';
+
+  let done = 0;
+  sched.forEach(t => {
+    const st = taskStatus(t);
+    if (st === 'done' || st === 'skipped') done++;
+
+    const card = document.createElement('div');
+    card.className = `task ${st}` + (t.sacred ? ' sacred' : '');
+    card.onclick = () => toggle(t.id);
+
+    let name = t.name;
+    if (t.missionByDay) {
+      const m = MISSIONS[new Date().getDay()];
+      name = `Tonight: ${m.focus}`;
+    }
+
+    const ts = state.tasks[t.id] || {};
+    const logged = ts.done && ts.doneAt ? `<div class="task-logged">✓ Done at ${ts.doneAt}</div>` : (ts.skipped ? `<div class="task-logged">Skipped — that's okay.</div>` : '');
+
+    const timeStr = t.start === t.end ? to12(t.start) : `${to12(t.start)} – ${to12(t.end)}`;
+
+    card.innerHTML = `
+      <div class="cat-dot cat-${t.cat}"></div>
+      <div class="task-body">
+        <div class="task-time">${timeStr}</div>
+        <div class="task-name">${name}</div>
+        ${t.detail ? `<div class="task-detail">${t.detail}</div>` : ''}
+        ${logged}
+      </div>
+      <div class="check"></div>
+    `;
+    list.appendChild(card);
+  });
+
+  const pct = sched.length > 0 ? Math.round((done / sched.length) * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = `${done} / ${sched.length}`;
+}
+
+function render() {
+  renderModes();
+  renderFocus();
+  renderTasks();
+  renderJeremyDay();
+  renderStreaks();
+  renderStats();
+  document.getElementById('baddayBtn').classList.toggle('on', state.bad);
+}
+
+/* === JEREMY DAY TRACKER === */
+function getJeremyDay() {
+  const d = Store.get('jeremyDay');
+  return (typeof d === 'number' && d > 0) ? d : 7;
+}
+function setJeremyDay(n) { Store.set('jeremyDay', n); }
+
+function renderJeremyDay() {
+  const el = document.getElementById('jeremyDay');
+  if (el) el.textContent = getJeremyDay();
+}
+
+function advanceJeremyDay() {
+  const current = getJeremyDay();
+  setJeremyDay(current + 1);
+  // log advancement to today's tasks for streak/stats
+  const logKey = 'jeremyLog';
+  const log = Store.get(logKey) || [];
+  const today = todayKey().replace('sched:', '');
+  if (!log.includes(today)) {
+    log.push(today);
+    Store.set(logKey, log);
+  }
+  render();
+}
+
+/* === STREAKS === */
+// Tracks consecutive days a given task id was marked done
+function computeStreak(taskId) {
+  let streak = 0;
+  const today = new Date();
+  for (let i = 0; i < 365; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const key = `sched:${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const day = Store.get(key);
+    if (!day) {
+      if (i === 0) continue; // today not started yet, skip but don't break
+      break;
+    }
+    const t = day.tasks?.[taskId];
+    if (t && t.done) {
+      streak++;
+    } else if (i === 0) {
+      // today not done yet but might be later — don't break
+      continue;
+    } else {
+      break;
+    }
+  }
+  return streak;
+}
+
+const STREAK_TARGETS = [
+  { id: 'workout',  label: 'Workout' },
+  { id: 'mission',  label: 'Focus' },
+  { id: 'dinner',   label: 'Dinner' },
+  { id: 'kidtime',  label: 'Kids' },
+  { id: 'sleep',    label: 'Sleep' }
+];
+
+function renderStreaks() {
+  const el = document.getElementById('streaks');
+  if (!el) return;
+  el.innerHTML = '';
+  STREAK_TARGETS.forEach(s => {
+    const n = computeStreak(s.id);
+    const card = document.createElement('div');
+    card.className = 'streak' + (n >= 3 ? ' hot' : (n === 0 ? ' cold' : ''));
+    card.innerHTML = `
+      <div class="streak-value">${n > 0 ? '🔥' + n : '·'}</div>
+      <div class="streak-label">${s.label}</div>
+    `;
+    el.appendChild(card);
+  });
+}
+
+/* === STATS === */
+function dayCompletion(dayData) {
+  if (!dayData || !dayData.tasks) return 0;
+  const sched = SCHEDULES[dayData.mode] || SCHED_6AM;
+  const filtered = dayData.bad ? badDayFilter(sched) : sched;
+  if (filtered.length === 0) return 0;
+  let done = 0;
+  filtered.forEach(t => {
+    const ts = dayData.tasks[t.id];
+    if (ts && (ts.done || ts.skipped)) done++;
+  });
+  return Math.round((done / filtered.length) * 100);
+}
+
+function renderStats() {
+  const grid = document.getElementById('weekGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  const today = new Date();
+  const dayNames = ['S','M','T','W','T','F','S'];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const key = `sched:${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const day = Store.get(key);
+    const pct = dayCompletion(day);
+
+    const cell = document.createElement('div');
+    let cls = 'week-day';
+    if (i === 0) cls += ' today';
+    if (day) cls += ' has-data';
+    if (pct >= 80) cls += ' complete';
+    else if (pct >= 40) cls += ' partial';
+    cell.className = cls;
+    cell.innerHTML = `
+      <div class="wd-name">${dayNames[d.getDay()]}</div>
+      <div class="wd-pct">${day ? pct + '%' : '–'}</div>
+    `;
+    grid.appendChild(cell);
+  }
+
+  // Lifetime stats
+  const life = document.getElementById('lifetimeStats');
+  if (life) {
+    const counts = scanLifetime();
+    life.innerHTML = `
+      <div class="stat-row"><div class="stat-name">Jeremy's IT Lab day</div><div class="stat-num">${getJeremyDay()}<span class="stat-unit">/ ~60</span></div></div>
+      <div class="stat-row"><div class="stat-name">Workouts done</div><div class="stat-num">${counts.workout}</div></div>
+      <div class="stat-row"><div class="stat-name">Mission blocks hit</div><div class="stat-num">${counts.mission}</div></div>
+      <div class="stat-row"><div class="stat-name">Family dinners</div><div class="stat-num">${counts.dinner}</div></div>
+      <div class="stat-row"><div class="stat-name">Days logged</div><div class="stat-num">${counts.days}</div></div>
+    `;
+  }
+
+  // Streak stats
+  const sl = document.getElementById('streakStats');
+  if (sl) {
+    sl.innerHTML = STREAK_TARGETS.map(s => {
+      const n = computeStreak(s.id);
+      return `<div class="stat-row"><div class="stat-name">${s.label}</div><div class="stat-num">${n}<span class="stat-unit">${n === 1 ? 'day' : 'days'}</span></div></div>`;
+    }).join('');
+  }
+}
+
+function scanLifetime() {
+  const counts = { workout: 0, mission: 0, dinner: 0, kidtime: 0, sleep: 0, days: 0 };
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key || !key.startsWith('sched:')) continue;
+      const day = JSON.parse(localStorage.getItem(key) || 'null');
+      if (!day || !day.tasks) continue;
+      counts.days++;
+      Object.keys(counts).forEach(k => {
+        if (k === 'days') return;
+        if (day.tasks[k] && day.tasks[k].done) counts[k]++;
+      });
+    }
+  } catch (e) {}
+  return counts;
+}
+
+/* === ACTIONS === */
+function toggle(id) {
+  const c = state.tasks[id] || {};
+  if (c.done) state.tasks[id] = { done: false, skipped: true };
+  else if (c.skipped) delete state.tasks[id];
+  else state.tasks[id] = { done: true, skipped: false, doneAt: nowStamp() };
+  save();
+  render();
+}
+
+function toggleBadDay() {
+  state.bad = !state.bad;
+  if (state.bad) {
+    const sched = SCHEDULES[state.mode] || SCHED_6AM;
+    const keep = new Set(badDayFilter(sched).map(t => t.id));
+    sched.forEach(t => {
+      if (!keep.has(t.id) && !state.tasks[t.id]?.done) {
+        state.tasks[t.id] = { done: false, skipped: true };
+      }
+    });
+  }
+  save();
+  render();
+}
+
+function resetDay() {
+  if (!confirm('Reset everything for today?')) return;
+  state.tasks = {};
+  state.bad = false;
+  save();
+  render();
+}
+
+function catchUp() {
+  const sched = activeSched();
+  const n = nowMin();
+  sched.forEach(t => {
+    if (parseHM(t.end) <= n && !state.tasks[t.id]) {
+      state.tasks[t.id] = { done: true, skipped: false, doneAt: nowStamp() };
+    }
+  });
+  save();
+  render();
+}
+
+function dismissHint() {
+  document.getElementById('hint').style.display = 'none';
+  Store.set('hint:done', true);
+}
+
+/* === CLOCK + HEADER === */
+function tickClock() {
+  const d = new Date();
+  const h = d.getHours();
+  const m = d.getMinutes();
+  document.getElementById('clock').textContent = `${h%12||12}:${String(m).padStart(2,'0')} ${h>=12?'PM':'AM'}`;
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('greetDay').textContent = '· ' + days[d.getDay()];
+  document.getElementById('dateLine').textContent = `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+}
+
+/* === TABS === */
+document.querySelectorAll('.tab').forEach(t => {
+  t.onclick = () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('view-' + t.dataset.view).classList.add('active');
+    window.scrollTo(0, 0);
+  };
+});
+
+/* === BOOT === */
+load();
+tickClock();
+let lastDayKey = todayKey();
+function checkDayRollover() {
+  const t = todayKey();
+  if (t !== lastDayKey) { lastDayKey = t; load(); render(); }
+}
+setInterval(tickClock, 1000);
+setInterval(() => { checkDayRollover(); render(); }, 60000);
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) { checkDayRollover(); tickClock(); render(); }
+});
+
+if (Store.get('hint:done')) document.getElementById('hint').style.display = 'none';
+
+render();
+</script>
+
+</body>
+</html>
