@@ -623,6 +623,80 @@
   }
   .bills-due b { color: var(--warn); }
 
+  /* DAILY POST CARD */
+  .post-card {
+    background: var(--bg);
+    border: 1.5px solid var(--line);
+    border-left: 5px solid var(--sacred);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+  }
+  .post-card.posted {
+    background: var(--done-light);
+    border-color: var(--done);
+    border-left-color: var(--done);
+  }
+  .pc-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .pc-label {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--sacred);
+  }
+  .post-card.posted .pc-label { color: var(--done); }
+  .pc-streak {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--warn);
+    background: #ffedd5;
+    padding: 3px 10px;
+    border-radius: 999px;
+  }
+  .pc-streak.cold { color: var(--text-faint); background: var(--bg-elev); }
+  .pc-status {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .post-card.posted .pc-status { color: var(--done); }
+  .pc-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--text);
+    background: var(--bg-card);
+    resize: none;
+    margin-bottom: 10px;
+    -webkit-appearance: none;
+  }
+  .pc-input:focus { outline: none; border-color: var(--sacred); }
+  .pc-btn {
+    width: 100%;
+    padding: 12px;
+    background: var(--sacred);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    min-height: 46px;
+  }
+  .pc-btn:active { transform: scale(.98); }
+  .post-card.posted .pc-btn {
+    background: var(--bg);
+    color: var(--done);
+    border: 1.5px solid var(--done);
+  }
+
   /* DAY COUNTER (Jeremy's IT Lab tracker) */
   .day-counter {
     background: var(--primary);
@@ -824,6 +898,16 @@
         <div class="dc-value">Day <span id="jeremyDay">7</span></div>
       </div>
       <button class="dc-btn" onclick="advanceJeremyDay()">Day done · +1</button>
+    </div>
+
+    <div class="post-card" id="postCard">
+      <div class="pc-head">
+        <div class="pc-label">Daily post</div>
+        <div class="pc-streak" id="postStreakDisplay">·</div>
+      </div>
+      <div class="pc-status" id="postStatus">Not posted yet</div>
+      <textarea id="postText" class="pc-input" rows="2" placeholder="What did you post? (optional — for your records)" oninput="savePostText()"></textarea>
+      <button class="pc-btn" id="postBtn" onclick="togglePost()">I posted today</button>
     </div>
 
     <div class="streaks" id="streaks"></div>
@@ -1205,7 +1289,65 @@ function render() {
   renderStreaks();
   renderStats();
   renderBills();
+  renderPost();
   document.getElementById('baddayBtn').classList.toggle('on', state.bad);
+}
+
+/* === DAILY POST === */
+function postKey() { const d=new Date(); return `post:${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function getPost() { return Store.get(postKey()) || {posted:false, text:'', at:null}; }
+function setPost(p) { Store.set(postKey(), p); }
+function togglePost() {
+  const p = getPost();
+  if (p.posted) {
+    p.posted = false; p.at = null;
+  } else {
+    p.posted = true; p.at = nowStamp();
+  }
+  setPost(p);
+  render();
+}
+function savePostText() {
+  const txt = document.getElementById('postText').value;
+  const p = getPost();
+  p.text = txt;
+  setPost(p);
+}
+function computePostStreak() {
+  let n = 0;
+  const today = new Date();
+  for (let i = 0; i < 365; i++) {
+    const d = new Date(today); d.setDate(today.getDate() - i);
+    const key = `post:${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const p = Store.get(key);
+    if (p && p.posted) { n++; }
+    else if (i === 0) { continue; }  // today not done yet, but might be later
+    else { break; }
+  }
+  return n;
+}
+function renderPost() {
+  const card = document.getElementById('postCard');
+  if (!card) return;
+  const p = getPost();
+  const statusEl = document.getElementById('postStatus');
+  const btnEl = document.getElementById('postBtn');
+  const textEl = document.getElementById('postText');
+  const streakEl = document.getElementById('postStreakDisplay');
+
+  card.classList.toggle('posted', !!p.posted);
+  if (p.posted) {
+    statusEl.textContent = `✓ Posted${p.at ? ' at ' + p.at : ''}`;
+    btnEl.textContent = 'Undo';
+  } else {
+    statusEl.textContent = 'Not posted yet';
+    btnEl.textContent = 'I posted today';
+  }
+  if (document.activeElement !== textEl) textEl.value = p.text || '';
+
+  const n = computePostStreak();
+  streakEl.textContent = n > 0 ? `🔥 ${n} day${n===1?'':'s'}` : '·';
+  streakEl.classList.toggle('cold', n === 0);
 }
 
 /* === BILLS === */
