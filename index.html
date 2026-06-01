@@ -1080,7 +1080,7 @@ const MISSIONS = {
 /* === SCHEDULES === */
 const SCHED_6AM = [
   { id:'wake',     start:'4:30',  end:'4:30',  name:'Wake up',                                cat:'rest' },
-  { id:'workout',  start:'4:30',  end:'4:50',  name:'Workout · 20 min',                       cat:'physical', detail:'Mon, Wed, Fri. Tue/Thu: stretch + scripture.' },
+  { id:'morning',  start:'4:30',  end:'4:50',  name:'Scripture · quiet time · mobility',      cat:'rest', detail:'20 min ramp into the day.' },
   { id:'shower',   start:'4:50',  end:'5:00',  name:'Shower',                                  cat:'physical' },
   { id:'gear',     start:'5:00',  end:'5:05',  name:'Coffee · gear · last check',              cat:'prep' },
   { id:'rollout',  start:'5:05',  end:'5:05',  name:'Roll out',                                cat:'transit' },
@@ -1088,11 +1088,13 @@ const SCHED_6AM = [
   { id:'onsite',   start:'5:50',  end:'5:50',  name:'On site · 10 minutes early',              cat:'work', detail:'Early lands. Late costs.' },
   { id:'work',     start:'6:00',  end:'17:00', name:'Work',                                    cat:'work' },
   { id:'commute2', start:'17:00', end:'17:45', name:'Drive home · decompress',                 cat:'transit', detail:'Music or prayer. No brain work.' },
-  { id:'home',     start:'17:45', end:'18:00', name:'Home · hug the kids · reset',             cat:'family' },
-  { id:'cook',     start:'18:00', end:'18:45', name:'Cook dinner',                             cat:'family' },
-  { id:'dinner',   start:'18:45', end:'19:15', name:'Family dinner',                           cat:'family', sacred:true },
-  { id:'kidtime',  start:'19:15', end:'20:30', name:'Kid time',                                cat:'family', sacred:true, detail:'Phone in the drawer.' },
-  { id:'bedtime',  start:'20:30', end:'21:00', name:'Bedtime routine · kids down by 9',        cat:'family' },
+  { id:'home',     start:'17:45', end:'17:50', name:'Home · hug the kids · reset',             cat:'family' },
+  { id:'workout',  start:'17:50', end:'18:15', name:'Workout · 25 min',                        cat:'physical', detail:'Mon, Wed, Fri. Tue/Thu: stretch + mobility.' },
+  { id:'showerpm', start:'18:15', end:'18:30', name:'Shower',                                  cat:'physical' },
+  { id:'cook',     start:'18:30', end:'19:00', name:'Cook dinner',                             cat:'family', detail:'Faster meals — 30 min target.' },
+  { id:'dinner',   start:'19:00', end:'19:30', name:'Family dinner',                           cat:'family', sacred:true },
+  { id:'kidtime',  start:'19:30', end:'20:45', name:'Kid time',                                cat:'family', sacred:true, detail:'Phone in the drawer.' },
+  { id:'bedtime',  start:'20:45', end:'21:00', name:'Bedtime routine · kids down by 9',        cat:'family' },
   { id:'mission',  start:'21:00', end:'22:00', name:'Tonight\'s focus · 60 min',               cat:'mission', missionByDay:true },
   { id:'winddown', start:'22:00', end:'22:15', name:"Wind down · pick tomorrow's one thing",   cat:'rest' },
   { id:'sleep',    start:'22:15', end:'22:15', name:'Sleep',                                   cat:'rest', detail:'6h 15m floor.' }
@@ -1100,23 +1102,24 @@ const SCHED_6AM = [
 
 const SCHED_7AM = [
   { id:'wake',     start:'4:30',  end:'4:30',  name:'Wake up',                                cat:'rest' },
-  { id:'workout',  start:'4:30',  end:'5:00',  name:'Workout · 30 min',                       cat:'physical' },
+  { id:'morning',  start:'4:30',  end:'5:00',  name:'Scripture · quiet time · mobility',      cat:'rest' },
   { id:'shower',   start:'5:00',  end:'5:15',  name:'Shower',                                  cat:'physical' },
-  { id:'gear',     start:'5:15',  end:'5:30',  name:'Coffee · gear · scripture',               cat:'prep' },
+  { id:'gear',     start:'5:15',  end:'5:30',  name:'Coffee · gear · prep',                    cat:'prep' },
   { id:'breakfast',start:'5:30',  end:'6:00',  name:'Breakfast · family time',                 cat:'family' },
   { id:'rollout',  start:'6:05',  end:'6:05',  name:'Roll out',                                cat:'transit' },
   { id:'commute1', start:'6:05',  end:'6:50',  name:'Drive · CCNA audio',                      cat:'transit' },
   { id:'onsite',   start:'6:50',  end:'6:50',  name:'On site · 10 minutes early',              cat:'work' },
   { id:'work',     start:'7:00',  end:'18:00', name:'Work',                                    cat:'work' },
   { id:'commute2', start:'18:00', end:'18:45', name:'Drive home · decompress',                 cat:'transit' },
-  { id:'home',     start:'18:45', end:'19:00', name:'Home · hug the kids · reset',             cat:'family' },
-  { id:'cook',     start:'19:00', end:'19:30', name:'Cook dinner',                             cat:'family' },
-  { id:'dinner',   start:'19:30', end:'20:00', name:'Family dinner',                           cat:'family', sacred:true },
-  { id:'kidtime',  start:'20:00', end:'20:45', name:'Kid time',                                cat:'family', sacred:true },
-  { id:'bedtime',  start:'20:45', end:'21:00', name:'Bedtime routine',                         cat:'family' },
-  { id:'mission',  start:'21:00', end:'22:00', name:"Tonight's focus · 60 min",                cat:'mission', missionByDay:true },
-  { id:'winddown', start:'22:00', end:'22:15', name:'Wind down',                               cat:'rest' },
-  { id:'sleep',    start:'22:15', end:'22:15', name:'Sleep',                                   cat:'rest' }
+  { id:'home',     start:'18:45', end:'18:50', name:'Home · hug the kids · reset',             cat:'family' },
+  { id:'workout',  start:'18:50', end:'19:15', name:'Workout · 25 min',                        cat:'physical', detail:'Mon, Wed, Fri. Tue/Thu: stretch.' },
+  { id:'showerpm', start:'19:15', end:'19:30', name:'Shower',                                  cat:'physical' },
+  { id:'cook',     start:'19:30', end:'19:55', name:'Cook dinner · fast',                      cat:'family' },
+  { id:'dinner',   start:'19:55', end:'20:20', name:'Family dinner',                           cat:'family', sacred:true },
+  { id:'kidtime',  start:'20:20', end:'21:00', name:'Kid time',                                cat:'family', sacred:true, detail:'Compressed on 7 AM days.' },
+  { id:'bedtime',  start:'21:00', end:'21:15', name:'Bedtime routine',                         cat:'family' },
+  { id:'mission',  start:'21:15', end:'22:15', name:"Tonight's focus · 60 min",                cat:'mission', missionByDay:true },
+  { id:'sleep',    start:'22:30', end:'22:30', name:'Sleep',                                   cat:'rest' }
 ];
 
 const SCHED_SAT_OFF = [
